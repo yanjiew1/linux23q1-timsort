@@ -16,7 +16,7 @@ static void create_sample(struct list_head *head, int samples)
 {
 	for (int i = 0; i < samples; i++) {
 		element_t *elem = malloc(sizeof(*elem));
-		elem->val = rand() % samples;
+		elem->val = rand();
 		elem->seq = i;
 		list_add_tail(&elem->list, head);
 	}
@@ -89,7 +89,7 @@ int main(void)
 {
 	struct list_head sample, warmdata, testdata;
 	int count;
-	int nums = 10000;
+	int nums = 1000000;
 
 	test_t tests[] = { { shiverssort, "shiverssort" },
 			   { list_sort, "list_sort" },
