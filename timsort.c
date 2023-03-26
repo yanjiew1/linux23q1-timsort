@@ -84,15 +84,16 @@ static struct list_head *find_run(void *priv, struct list_head *list,
 			list = next;
 			next = list->next;
 		} while (next && cmp(priv, list, next) > 0);
+		list->next = prev;
 	} else {
 		do {
 			(*len)++;
 			list = next;
 			next = list->next;
 		} while (next && cmp(priv, list, next) <= 0);
+		list->next = NULL;
 	}
 
-	list->next = NULL;
 	return next;
 }
 
