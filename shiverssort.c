@@ -10,7 +10,7 @@
 #define unlikely(x) __builtin_expect(!!(x), 0)
 #endif
 
-#define MAX_MERGE_PENDING 85
+#define MAX_MERGE_PENDING (sizeof(size_t) * 8) + 1
 
 struct run {
 	struct list_head *list;
