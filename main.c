@@ -106,7 +106,7 @@ int main(void)
 
 	while (test->fp != NULL) {
 		printf("==== Testing %s ====\n", test->name);
-		/* Warn up */
+		/* Warm up */
 		copy_list(&sample, &testdata);
 		copy_list(&sample, &warmdata);
 		test->fp(&count, &warmdata, compare);
@@ -115,7 +115,7 @@ int main(void)
 		count = 0;
 		begin = clock();
 		test->fp(&count, &testdata, compare);
-		printf("  Used time:   %ld\n", clock() - begin);
+		printf("  Elapsed time:   %ld\n", clock() - begin);
 		printf("  Comparisons: %d\n", count);
 		printf("  List is %s\n",
 		       check_list(&testdata, nums) ? "sorted" : "not sorted");
