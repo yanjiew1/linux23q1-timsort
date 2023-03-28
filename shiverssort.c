@@ -103,12 +103,27 @@ static void merge_at(void *priv, list_cmp_func_t cmp, struct run *at)
 	at[0].len += at[1].len;
 }
 
+static struct run *merge_force_collapse(void *priv, list_cmp_func_t cmp,
+					struct run *stk, struct run *tp)
+{
+	while ((tp - stk + 1) >= 3) {
+		if (tp[-2].len < tp[0].len) {
+			merge_at(priv, cmp, &tp[-2]);
+			tp[-1] = tp[0];
+		} else {
+			merge_at(priv, cmp, &tp[-1]);
+		}
+		tp--;
+	}
+	return tp;
+}
+
 static struct run *merge_collapse(void *priv, list_cmp_func_t cmp,
 				  struct run *stk, struct run *tp)
 {
 	while ((tp - stk + 1) >= 3) {
-		size_t x = tp[-1].len | tp[0].len;
-		if (x <= (tp[-2].len & ~x))
+		if (__builtin_clzl(tp[-2].len) <
+		    __builtin_clzl(tp[-1].len | tp[0].len))
 			break;
 		merge_at(priv, cmp, &tp[-2]);
 		tp[-1] = tp[0];
@@ -138,10 +153,7 @@ void shiverssort(void *priv, struct list_head *head, list_cmp_func_t cmp)
 	} while (list);
 
 	/* End of input; merge together all the runs. */
-	while (tp > stk + 1) {
-		tp[-1].list = merge(priv, cmp, tp[-1].list, tp[0].list);
-		tp--;
-	}
+	tp = merge_force_collapse(priv, cmp, stk, tp);
 
 	/* The final merge; rebuild prev links */
 	if (tp > stk) {
