@@ -14,6 +14,9 @@ main: $(OBJS)
 %.o: %.c
 	$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
+test: main
+	@./main
+
 clean:
 	rm -f $(OBJS) $(deps) *~ main
 	rm -rf *.dSYM
