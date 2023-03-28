@@ -107,12 +107,7 @@ static struct run *merge_force_collapse(void *priv, list_cmp_func_t cmp,
 					struct run *stk, struct run *tp)
 {
 	while ((tp - stk + 1) >= 3) {
-		if (tp[-2].len < tp[0].len) {
-			merge_at(priv, cmp, &tp[-2]);
-			tp[-1] = tp[0];
-		} else {
-			merge_at(priv, cmp, &tp[-1]);
-		}
+		merge_at(priv, cmp, &tp[-1]);
 		tp--;
 	}
 	return tp;
