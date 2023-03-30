@@ -18,17 +18,30 @@ struct run {
 };
 
 static struct list_head *merge(void *priv, list_cmp_func_t cmp,
-			       struct list_head *a, struct list_head *b)
+				struct list_head *a, struct list_head *b)
 {
-	struct list_head *head, **tail = &head, **node;
+	struct list_head *head, **tail = &head;
 
-	do {
+	for (;;) {
 		/* if equal, take 'a' -- important for sort stability */
-		node = cmp(priv, a, b) <= 0 ? &a : &b;
-		*tail = *node;
-		tail = &(*node)->next;
-	} while ((*node = (*node)->next));
-	*tail = (struct list_head *)((uintptr_t)a | (uintptr_t)b);
+		if (cmp(priv, a, b) <= 0) {
+			*tail = a;
+			tail = &a->next;
+			a = a->next;
+			if (!a) {
+				*tail = b;
+				break;
+			}
+		} else {
+			*tail = b;
+			tail = &b->next;
+			b = b->next;
+			if (!b) {
+				*tail = a;
+				break;
+			}
+		}
+	}
 	return head;
 }
 
@@ -50,16 +63,29 @@ static void build_prev_link(struct list_head *head, struct list_head *tail,
 static void merge_final(void *priv, list_cmp_func_t cmp, struct list_head *head,
 			struct list_head *a, struct list_head *b)
 {
-	struct list_head *tail = head, **node;
+	struct list_head *tail = head;
+	uint8_t count = 0;
 
-	do {
+	for (;;) {
 		/* if equal, take 'a' -- important for sort stability */
-		node = cmp(priv, a, b) <= 0 ? &a : &b;
-		tail->next = *node;
-		(*node)->prev = tail;
-		tail = *node;
-	} while ((*node = (*node)->next));
-	b = (struct list_head *)((uintptr_t)a | (uintptr_t)b);
+		if (cmp(priv, a, b) <= 0) {
+			tail->next = a;
+			a->prev = tail;
+			tail = a;
+			a = a->next;
+			if (!a)
+				break;
+		} else {
+			tail->next = b;
+			b->prev = tail;
+			tail = b;
+			b = b->next;
+			if (!b) {
+				b = a;
+				break;
+			}
+		}
+	}
 
 	/* Finish linking remainder of list b on to tail */
 	build_prev_link(head, tail, b);
