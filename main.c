@@ -12,30 +12,33 @@ typedef struct element {
 	int seq;
 } element_t;
 
-static void create_sample(struct list_head *head, int samples)
+#define SAMPLES 1000000
+
+static void create_sample(struct list_head *head, element_t *space, int samples)
 {
 	for (int i = 0; i < samples; i++) {
-		element_t *elem = malloc(sizeof(*elem));
+		element_t *elem = space+i;
 		elem->val = rand();
 		elem->seq = i;
 		list_add_tail(&elem->list, head);
 	}
 }
 
-static void copy_list(struct list_head *from, struct list_head *to)
+static void copy_list(struct list_head *from, struct list_head *to, element_t *space)
 {
 	if (list_empty(from))
 		return;
 
 	element_t *entry;
 	list_for_each_entry(entry, from, list) {
-		element_t *copy = malloc(sizeof(*copy));
+		element_t *copy = space++;
 		copy->val = entry->val;
 		copy->seq = entry->seq;
 		list_add_tail(&copy->list, to);
 	}
 }
 
+#if 0
 static void free_list(struct list_head *head)
 {
 	element_t *entry, *safe;
@@ -44,6 +47,7 @@ static void free_list(struct list_head *head)
 		free(entry);
 	}
 }
+#endif
 
 int compare(void *priv, const struct list_head *a, const struct list_head *b)
 {
@@ -87,40 +91,45 @@ typedef struct test {
 
 int main(void)
 {
-	struct list_head sample, warmdata, testdata;
+	struct list_head sample_head, warmdata_head, testdata_head;
+	element_t *samples, *warmdata, *testdata;
 	int count;
 	int nums = 1000000;
 
-	test_t tests[] = { { shiverssort, "shiverssort" },
+	srand(1050);
+
+	test_t tests[] = {
 			   { list_sort, "list_sort" },
+			   { shiverssort, "shiverssort" },
 			   { timsort, "timsort" },
 			   { NULL, NULL } },
 	       *test = tests;
 
-	INIT_LIST_HEAD(&sample);
-	INIT_LIST_HEAD(&warmdata);
-	INIT_LIST_HEAD(&testdata);
+	INIT_LIST_HEAD(&sample_head);
 
-	srand((uintptr_t)&main ^ time(NULL));
-	create_sample(&sample, nums);
+	samples = malloc(sizeof(*samples) * SAMPLES);
+	warmdata = malloc(sizeof(*warmdata) * SAMPLES);
+	testdata = malloc(sizeof(*testdata) * SAMPLES);
+
+	create_sample(&sample_head, samples, nums);
 
 	while (test->fp != NULL) {
 		printf("==== Testing %s ====\n", test->name);
 		/* Warm up */
-		copy_list(&sample, &testdata);
-		copy_list(&sample, &warmdata);
-		test->fp(&count, &warmdata, compare);
+		INIT_LIST_HEAD(&warmdata_head);
+		INIT_LIST_HEAD(&testdata_head);
+		copy_list(&sample_head, &testdata_head, testdata);
+		copy_list(&sample_head, &warmdata_head, warmdata);
+		test->fp(&count, &warmdata_head, compare);
 		/* Test */
 		clock_t begin;
 		count = 0;
 		begin = clock();
-		test->fp(&count, &testdata, compare);
+		test->fp(&count, &testdata_head, compare);
 		printf("  Elapsed time:   %ld\n", clock() - begin);
-		printf("  Comparisons: %d\n", count);
+		printf("  Comparisons:    %d\n", count);
 		printf("  List is %s\n",
-		       check_list(&testdata, nums) ? "sorted" : "not sorted");
-		free_list(&testdata);
-		free_list(&warmdata);
+		       check_list(&testdata_head, nums) ? "sorted" : "not sorted");
 		test++;
 	}
 
