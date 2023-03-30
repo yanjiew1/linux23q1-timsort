@@ -4,7 +4,7 @@ CFLAGS = -O2
 all: main
 
 OBJS := main.o list_sort.o shiverssort.o \
-        timsort.o
+        timsort.o shiverssort2.o
 
 deps := $(OBJS:%.o=.%.o.d)
 
