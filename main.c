@@ -12,7 +12,7 @@ typedef struct element {
 	int seq;
 } element_t;
 
-#define SAMPLES 1000000
+#define SAMPLES ((1 << 20) + 20)
 
 static void create_sample(struct list_head *head, element_t *space, int samples)
 {
@@ -94,12 +94,13 @@ int main(void)
 	struct list_head sample_head, warmdata_head, testdata_head;
 	element_t *samples, *warmdata, *testdata;
 	int count;
-	int nums = 1000000;
+	int nums = SAMPLES;
 
 	srand(1050);
 
 	test_t tests[] = {
 			   { list_sort, "list_sort" },
+			   { list_sort_old, "list_sort_old" },
 			   { shiverssort, "shiverssort" },
 			   { timsort, "timsort" },
 			   { NULL, NULL } },
