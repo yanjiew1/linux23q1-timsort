@@ -2,3 +2,4 @@ a.out
 cscope.out
 *.o
 *.o.d
+main
